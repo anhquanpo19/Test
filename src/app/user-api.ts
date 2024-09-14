@@ -51,6 +51,9 @@ export default class UserApi {
       throw new CustomError(ErrorCode.INVALID_PASSWORD);
 
     const accessToken = Utils.generateAccessToken(user.toJSON());
+    user.token = accessToken;
+    user.save();
+
     const refreshToken = Utils.generateRefreshToken(user.toJSON());
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
@@ -75,21 +78,39 @@ export default class UserApi {
       throw new CustomError(ErrorCode.MISSING_REFRESH_TOKEN);
     }
 
-    jwt.verify(refreshToken, REFRESH_SECRET, (err: any, user: any) => {
-      if (err) {
-        throw new CustomError(ErrorCode.MISSING_REFRESH_TOKEN);
+    return await jwt.verify(
+      refreshToken,
+      REFRESH_SECRET,
+      async (err: any, user: any) => {
+        if (err) {
+          throw new CustomError(ErrorCode.MISSING_REFRESH_TOKEN);
+        }
+
+        const newAccessToken = Utils.generateAccessToken({
+          ...user,
+          token: null,
+        });
+        await UserService.update(
+          { _id: user._id },
+          { token: newAccessToken },
+          {},
+          UserModel
+        );
+
+        return { token: newAccessToken };
       }
-
-      const newAccessToken = Utils.generateAccessToken(user);
-
-      return {
-        token: newAccessToken,
-      };
-    });
+    );
   };
 
   signOut = async (req: any, res: Response) => {
     const refreshToken = req.cookies.refreshToken;
+    await UserService.update(
+      { _id: req.user._id },
+      { token: null },
+      {},
+      UserModel
+    );
+
     Utils.deleteRefreshToken(refreshToken);
     res.clearCookie("refreshToken");
     Utils.generateAccessToken({ email: req.user.email });
@@ -98,6 +119,6 @@ export default class UserApi {
   };
 
   getProfile = async (req: any) => {
-    return { ...req.user, password: undefined };
+    return req.user;
   };
 }

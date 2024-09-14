@@ -12,6 +12,7 @@ export interface IUserModel extends Document {
   status?: string;
   created_at: Date;
   updated_at: Date;
+  token?: string;
 }
 
 const userSchema = new Schema<IUserModel>({
@@ -24,6 +25,7 @@ const userSchema = new Schema<IUserModel>({
   status: { type: String },
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now },
+  token: String,
 });
 
 userSchema.plugin(paginate);

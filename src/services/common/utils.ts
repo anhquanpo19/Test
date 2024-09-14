@@ -51,11 +51,11 @@ export default class Utils {
   }
 
   static generateAccessToken(payload: any) {
-    return jwt.sign(payload, SECRET_TOKEN, { expiresIn: "15m" });
+    return jwt.sign(payload, SECRET_TOKEN, { expiresIn: '15m' });
   }
 
   static generateRefreshToken(payload: any) {
-    const refreshToken = jwt.sign(payload, REFRESH_SECRET, { expiresIn: "1d" });
+    const refreshToken = jwt.sign(payload, REFRESH_SECRET);
     refreshTokens.push(refreshToken);
     return refreshToken;
   }
@@ -65,7 +65,7 @@ export default class Utils {
     if (index !== -1) {
       refreshTokens.splice(index, 1);
     }
-    
+
     return refreshToken;
   }
 }
